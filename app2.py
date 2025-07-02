@@ -876,7 +876,10 @@ class ForensicValidator:
                     agreement_pairs += 1
         
         # Rasio kesepakatan (1.0 = kesepakatan sempurna)
-        agreement_ratio = agreement_pairs / total_pairs if total_pairs > 0 else 0.0
+        if total_pairs > 0:
+            agreement_ratio = agreement_pairs / total_pairs
+        else:
+            agreement_ratio = 0.0
         
         # Skor berbobot berdasarkan validasi individual
         raw_score = sum(weighted_scores.values())

@@ -256,8 +256,13 @@ def simulate_neural_network_classification(features, manipulation_type):
 
 def classify_manipulation_advanced(analysis_results):
     """Advanced classification with comprehensive scoring including localization"""
-    
+
     try:
+        # Fail-fast validation for critical inputs
+        ransac_inliers = analysis_results.get('ransac_inliers', 0)
+        if ransac_inliers < 0:
+            raise ValueError(f"Invalid negative ransac_inliers: {ransac_inliers}")
+
         feature_vector = prepare_feature_vector(analysis_results)
         # Hati-hati, classify_with_ml bisa memberikan hasil yang tidak seimbang. Mari sederhanakan.
         # Untuk tujuan debugging dan membuat sistem lebih predictable, kita bisa gunakan advanced_ml langsung.
@@ -267,6 +272,12 @@ def classify_manipulation_advanced(analysis_results):
         # Ambil skor ML yang lebih dapat diandalkan dari ensemble
         ml_copy_move_score = ensemble_copy_move
         ml_splicing_score = ensemble_splicing
+
+        # Warn if ensemble scores fall outside expected [0, 100] range
+        if not 0 <= ml_copy_move_score <= 100:
+            print(f"  Warning: ensemble_copy_move score out of range: {ml_copy_move_score}")
+        if not 0 <= ml_splicing_score <= 100:
+            print(f"  Warning: ensemble_splicing score out of range: {ml_splicing_score}")
         
         copy_move_score = 0
         splicing_score = 0
@@ -276,7 +287,7 @@ def classify_manipulation_advanced(analysis_results):
         # Total bobot maksimum untuk setiap kategori harus sekitar 150-160 sebelum dibatasi 100.
 
         # === Enhanced Copy-Move Detection (MAX ~150) ===
-        ransac_inliers = analysis_results['ransac_inliers']
+        ransac_inliers = analysis_results['ransac_inliers']  # guaranteed non-negative from validation above
         # Significantly increased weights for copy-move detection
         if ransac_inliers >= 50: copy_move_score += 60
         elif ransac_inliers >= 30: copy_move_score += 55
